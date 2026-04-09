@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import { loadNodes, loadEdges, loadPartyColors, loadCoalitions } from './lib/data.js';
 import { computeLayout } from './lib/layout.js';
 import { glowLayer, coalitionLayer, edgeLayer, nodeLayer, labelLayer } from './lib/layers.js';
@@ -10,13 +13,15 @@ import { renderToPng } from './lib/export.js';
 const { values: args } = parseArgs({
   options: {
     'out-dir':            { type: 'string', default: 'output/' },
-    'party-colors':       { type: 'string', default: 'party_colours.json' },
-    'coalitions':         { type: 'string', default: 'coalitions.json' },
+    'party-colors':       { type: 'string', default: join(__dirname, 'party_colours.json') },
+    'coalitions':         { type: 'string', default: join(__dirname, 'coalitions.json') },
     'parliament':         { type: 'string', default: '' },
     'title':              { type: 'string', default: '' },
     'min-weight':         { type: 'string', default: '0.15' },
     'top-edges-per-pair': { type: 'string', default: '40' },
     'seed':               { type: 'string', default: '42' },
+    'filter-parties':     { type: 'string', default: '' },  // comma-separated, e.g. "CDU/CSU,SPD"
+    'img-suffix':         { type: 'string', default: '' },  // appended to output filename
   }
 });
 
@@ -26,19 +31,28 @@ const topEdges     = parseInt(args['top-edges-per-pair'], 10);
 const seed         = parseInt(args['seed'], 10);
 const parliament   = args['parliament'];
 const title        = args['title'];
+const suffix       = args['img-suffix'] ? `_${args['img-suffix']}` : '';
+const filterParties = args['filter-parties']
+  ? new Set(args['filter-parties'].split(',').map(s => s.trim()))
+  : null;
 const W = 2400, H = 2400;
 
 // Derive img filename: "Bundestag 2017 - 2021" → "bt_2017_2021.png"
 const imgName = parliament
-  ? 'bt_' + parliament.replace(/[^0-9]+/g, '_').replace(/^_+|_+$/g, '') + '.png'
-  : 'network.png';
+  ? 'bt_' + parliament.replace(/[^0-9]+/g, '_').replace(/^_+|_+$/g, '') + suffix + '.png'
+  : 'network' + suffix + '.png';
 const imgDir  = join(outDir, '..', 'img');
 mkdirSync(outDir, { recursive: true });
 mkdirSync(imgDir, { recursive: true });
 
 console.log(`Loading data from ${outDir}...`);
-const nodes        = loadNodes(join(outDir, 'nodes.csv'));
+let nodes          = loadNodes(join(outDir, 'nodes.csv'));
 const edges        = loadEdges(join(outDir, 'edges.csv'));
+
+if (filterParties) {
+  nodes = nodes.filter(n => filterParties.has(n.party));
+  console.log(`Filtered to parties [${[...filterParties].join(', ')}]: ${nodes.length} nodes`);
+}
 const partyColors  = loadPartyColors(args['party-colors']);
 const coalition    = loadCoalitions(args['coalitions'], parliament);
 

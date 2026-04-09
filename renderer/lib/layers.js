@@ -110,12 +110,6 @@ export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdges
     pairMap.get(key).edges.push({ e, src, tgt });
   }
 
-  // Party size map for scaling k
-  const partySizes = new Map();
-  for (const n of nodes) partySizes.set(n.party, (partySizes.get(n.party) ?? 0) + 1);
-  let maxSize = 1;
-  for (const s of partySizes.values()) if (s > maxSize) maxSize = s;
-
   // Collect all weights for normalisation
   let maxW = minWeight;
   for (const e of edges) {
@@ -126,6 +120,12 @@ export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdges
   const widthScale = (w) => 0.4 + ((w - minWeight) / (maxW - minWeight)) * (2.5 - 0.4);
   const opacityScale = (w) => 0.6 + ((w - minWeight) / (maxW - minWeight)) * (0.25);
 
+  // Party size map for scaling k
+  const partySizes = new Map();
+  for (const n of nodes) partySizes.set(n.party, (partySizes.get(n.party) ?? 0) + 1);
+  let maxSize = 1;
+  for (const s of partySizes.values()) if (s > maxSize) maxSize = s;
+
   let defs = '<defs>';
   let lines = '';
   let edgeIdx = 0;
@@ -133,7 +133,6 @@ export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdges
   for (const { partyA, partyB, edges: pairEdges } of pairMap.values()) {
     const sizeA = partySizes.get(partyA) ?? 1;
     const sizeB = partySizes.get(partyB) ?? 1;
-    // Scale edges by sqrt of smaller party's size relative to largest party — small parties get proportionally fewer edges
     const k = Math.max(3, Math.ceil(topEdgesPerPair * Math.sqrt(Math.min(sizeA, sizeB) / maxSize)));
 
     // Diversify: take only the single best edge per source node, so every MP
