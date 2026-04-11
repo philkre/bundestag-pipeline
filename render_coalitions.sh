@@ -27,7 +27,7 @@ render_period() {
     --filter-parties "$parties" \
     --img-suffix "coalition" \
     --min-weight 0.15 \
-    --top-edges-per-pair 40
+    --top-edges-per-mp 2
 }
 
 render_period "bundestag_2005_2009" "CDU/CSU,SPD"                           "Grand Coalition 2005–09"

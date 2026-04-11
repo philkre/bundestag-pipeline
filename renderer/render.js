@@ -17,8 +17,8 @@ const { values: args } = parseArgs({
     'coalitions':         { type: 'string', default: join(__dirname, 'coalitions.json') },
     'parliament':         { type: 'string', default: '' },
     'title':              { type: 'string', default: '' },
-    'min-weight':         { type: 'string', default: '0.15' },
-    'top-edges-per-pair': { type: 'string', default: '40' },
+    'min-weight':         { type: 'string', default: '0' },
+    'top-edges-per-mp':   { type: 'string', default: '3' },
     'seed':               { type: 'string', default: '42' },
     'filter-parties':     { type: 'string', default: '' },  // comma-separated, e.g. "CDU/CSU,SPD"
     'img-suffix':         { type: 'string', default: '' },  // appended to output filename
@@ -27,7 +27,7 @@ const { values: args } = parseArgs({
 
 const outDir       = args['out-dir'];
 const minWeight    = parseFloat(args['min-weight']);
-const topEdges     = parseInt(args['top-edges-per-pair'], 10);
+const topEdgesPerMp = parseInt(args['top-edges-per-mp'], 10);
 const seed         = parseInt(args['seed'], 10);
 const parliament   = args['parliament'];
 const title        = args['title'];
@@ -65,7 +65,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   <rect width="${W}" height="${H}" fill="#0d1117"/>
   ${glowLayer(laid, partyColors)}
   ${coalitionLayer(laid, coalition)}
-  ${edgeLayer(laid, edges, partyColors, { minWeight, topEdgesPerPair: topEdges })}
+  ${edgeLayer(laid, edges, partyColors, { minWeight, topEdgesPerMp })}
   ${nodeLayer(laid, partyColors)}
   ${labelLayer(laid, partyColors, coalition, title, { width: W, height: H })}
 </svg>`;

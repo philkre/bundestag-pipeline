@@ -94,59 +94,40 @@ export function coalitionLayer(nodes, coalitionParties) {
     stroke-dasharray="8,5"/>
 </g>`;
 }
-export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdgesPerPair = 15 } = {}) {
+export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdgesPerMp = 2 } = {}) {
   const nodeById = new Map(nodes.map(n => [n.id, n]));
 
-  // Group cross-party edges by sorted party pair key
-  const pairMap = new Map();
+  // Collect all cross-party edges above threshold, grouped by source MP
+  const byMp = new Map();
   for (const e of edges) {
-    if (e.weight <= 0) continue;          // always exclude negatives per spec
-    if (e.weight <= minWeight) continue;  // exclude below threshold
+    if (e.weight <= minWeight) continue;
     const src = nodeById.get(e.source), tgt = nodeById.get(e.target);
-    if (!src || !tgt) continue;
-    if (src.party === tgt.party) continue; // intra-party: skip
-    const key = [src.party, tgt.party].sort().join('|||');
-    if (!pairMap.has(key)) pairMap.set(key, { partyA: src.party, partyB: tgt.party, edges: [] });
-    pairMap.get(key).edges.push({ e, src, tgt });
+    if (!src || !tgt || src.party === tgt.party) continue;
+    if (!byMp.has(e.source)) byMp.set(e.source, []);
+    byMp.get(e.source).push({ e, src, tgt });
   }
 
-  // Collect all weights for normalisation
-  let maxW = minWeight;
-  for (const e of edges) {
-    if (e.weight > minWeight && e.weight > maxW) maxW = e.weight;
+  // For each MP, keep only their top-N cross-party edges by kappa
+  const selected = [];
+  for (const mpEdges of byMp.values()) {
+    mpEdges.sort((a, b) => b.e.weight - a.e.weight);
+    for (const item of mpEdges.slice(0, topEdgesPerMp)) selected.push(item);
   }
-  if (maxW <= minWeight) maxW = 1;
 
-  const widthScale = (w) => 0.4 + ((w - minWeight) / (maxW - minWeight)) * (2.5 - 0.4);
-  const opacityScale = (w) => 0.6 + ((w - minWeight) / (maxW - minWeight)) * (0.25);
+  // Normalise weights across the selected set
+  let minW = Infinity, maxW = -Infinity;
+  for (const { e } of selected) { if (e.weight < minW) minW = e.weight; if (e.weight > maxW) maxW = e.weight; }
+  if (!isFinite(minW) || maxW <= minW) { minW = minWeight; maxW = minW + 1; }
 
-  // Party size map for scaling k
-  const partySizes = new Map();
-  for (const n of nodes) partySizes.set(n.party, (partySizes.get(n.party) ?? 0) + 1);
-  let maxSize = 1;
-  for (const s of partySizes.values()) if (s > maxSize) maxSize = s;
+  const widthScale = (w) => 0.4 + ((w - minW) / (maxW - minW)) * (2.5 - 0.4);
+  const opacityScale = (w) => 0.6 + ((w - minW) / (maxW - minW)) * (0.25);
 
   let defs = '<defs>';
   let lines = '';
   let edgeIdx = 0;
 
-  for (const { partyA, partyB, edges: pairEdges } of pairMap.values()) {
-    const sizeA = partySizes.get(partyA) ?? 1;
-    const sizeB = partySizes.get(partyB) ?? 1;
-    const k = Math.max(3, Math.ceil(topEdgesPerPair * Math.sqrt(Math.min(sizeA, sizeB) / maxSize)));
-
-    // Diversify: take only the single best edge per source node, so every MP
-    // with a strong cross-party connection gets one representative line rather
-    // than all lines funnelling through the same high-kappa individual.
-    const bySource = new Map();
-    for (const item of pairEdges) {
-      const sid = item.e.source;
-      if (!bySource.has(sid) || item.e.weight > bySource.get(sid).e.weight)
-        bySource.set(sid, item);
-    }
-    const top = [...bySource.values()]
-      .sort((a, b) => b.e.weight - a.e.weight)
-      .slice(0, k);
+  {
+    const top = selected;
 
     // Per-edge gradient aligned along the actual edge geometry using
     // gradientUnits="userSpaceOnUse" — guarantees each node always receives
@@ -175,6 +156,7 @@ export function edgeLayer(nodes, edges, partyColors, { minWeight = 0.3, topEdges
   }
 
   defs += '\n</defs>';
+
   return `${defs}\n<g class="layer-edges">\n${lines}</g>`;
 }
 export function nodeLayer(nodes, partyColors) {
