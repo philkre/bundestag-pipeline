@@ -17,7 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 
 PERIODS = [
     ("bundestag_2005_2009", "2005–09", ["CDU/CSU", "SPD"]),
@@ -142,7 +142,8 @@ def main():
     plt.xticks(x, labels, color="white")
     plt.tight_layout()
 
-    out = ROOT / "polarisation.png"
+    out = ROOT / "output" / "img" / "polarisation.png"
+    (ROOT / "output" / "img").mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
     print(f"\nSaved → {out}")
 

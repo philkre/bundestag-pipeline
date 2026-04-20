@@ -29,7 +29,7 @@ from adjustText import adjust_text
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 IMG_DIR  = BASE_DIR / "output" / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -54,7 +54,7 @@ VOTE_MAP = {"yes": 1.0, "no": -1.0}  # abstain / no_show → NaN
 # ── Party colours ──────────────────────────────────────────────────────────────
 LIGHT_MODE = len(sys.argv) > 1 and sys.argv[1] == "light"
 
-with open(BASE_DIR / "party_colours.json") as f:
+with open(BASE_DIR / "config" / "party_colours.json") as f:
     party_color: dict = json.load(f)
 
 # Normalise aliases in colour dict too

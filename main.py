@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from cli import parse_args
-from ingest import (
+from pipeline.cli import parse_args
+from pipeline.ingest import (
     build_graph,
     count_roll_calls,
     count_votes,
     load_graph_from_csv,
     write_outputs,
 )
-from network import basic_metrics, cross_party_edge_counts
-from plot import load_party_colors, plot_graph, plot_weight_histogram
+from pipeline.network import basic_metrics, cross_party_edge_counts
+from pipeline.plot import load_party_colors, plot_graph, plot_weight_histogram
 
 
 def main() -> None:

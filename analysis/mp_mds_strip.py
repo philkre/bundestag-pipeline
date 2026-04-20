@@ -55,12 +55,12 @@ else:
         ann_line_alpha  = 0.38,
     )
     LIGHT_PARTY_OVERRIDES = {}
-OUTPUT    = Path("output")
+OUTPUT    = Path(__file__).parent.parent / "output"
 IMG_DIR   = OUTPUT / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 DATA_DIR  = OUTPUT / PERIOD
-COLORS_F  = Path("renderer/party_colours.json")
+COLORS_F  = Path(__file__).parent.parent / "config" / "party_colours.json"
 
 PARTY_ORDER = ["AfD", "CDU/CSU", "FDP", "SPD", "BÜNDNIS 90/DIE GRÜNEN",
                "Die Linke", "BSW"]
@@ -163,7 +163,7 @@ nodes["x"] = pos1d
 
 # Orient consistently: coalition parties should have positive (right) mean.
 # This gives "opposition ← → coalition" semantics across all periods.
-with open(Path("renderer/coalitions.json")) as f:
+with open(BASE_DIR / "config" / "coalitions.json") as f:
     coalitions_map = json.load(f)
 
 # Match period to coalition key (e.g. "bundestag_2017_2021" → "Bundestag 2017 - 2021")

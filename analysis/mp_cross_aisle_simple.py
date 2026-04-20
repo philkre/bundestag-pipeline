@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 IMG_DIR  = BASE_DIR / "output" / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -56,7 +56,7 @@ else:
     C = dict(coal="#4a9fd4", opp="#e05c4a", cross="#888888")
 
 # ── Load coalitions ───────────────────────────────────────────────────────────
-with open(BASE_DIR / "renderer" / "coalitions.json") as f:
+with open(BASE_DIR / "config" / "coalitions.json") as f:
     coalitions_raw = json.load(f)
 coalitions_map = {_period_key(k): set(v) for k, v in coalitions_raw.items()}
 

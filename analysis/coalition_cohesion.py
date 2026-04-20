@@ -21,7 +21,7 @@ import matplotlib.colors as mcolors
 from collections import defaultdict, Counter
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 BG   = "#0d1117"
 
 PERIODS = [
@@ -141,7 +141,7 @@ def draw_coalition_panel(ax, nodes, edges, coalition, label, colors):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    with open(ROOT / "party_colours.json") as f:
+    with open(ROOT / "config" / "party_colours.json") as f:
         colors = json.load(f)
 
     # Collect data for all periods
@@ -217,7 +217,8 @@ def main():
     fig.suptitle("Coalition cohesion — how tightly do coalition partners vote together?",
                  color="white", fontsize=13, y=0.99)
 
-    out = ROOT / "output" / "coalition_cohesion.png"
+    out = ROOT / "output" / "img" / "coalition_cohesion.png"
+    (ROOT / "output" / "img").mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight", facecolor=BG)
     print(f"Saved → {out}")
 

@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 
 PERIODS = [
     ("bundestag_2005_2009", "2005–09"),
@@ -156,7 +156,7 @@ def resolve_color(party: str, colors: dict) -> str:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    with open(ROOT / "party_colours.json") as f:
+    with open(ROOT / "config" / "party_colours.json") as f:
         colors = json.load(f)
 
     all_positions: list[dict] = []
@@ -219,7 +219,8 @@ def main():
     ax.grid(axis="y", color="#333", linestyle="--", linewidth=0.7)
 
     plt.tight_layout()
-    out = ROOT / "output" / "mds_drift.png"
+    out = ROOT / "output" / "img" / "mds_drift.png"
+    (ROOT / "output" / "img").mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     print(f"\nSaved → {out}")

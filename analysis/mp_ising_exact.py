@@ -37,7 +37,7 @@ from scipy.optimize import minimize_scalar
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 IMG_DIR  = BASE_DIR / "output" / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -72,7 +72,7 @@ else:
              grid="#1e2530", na="#1a2030", gc="#0d1117")
     LIGHT_OV = {}
 
-with open(BASE_DIR / "renderer" / "party_colours.json") as f:
+with open(BASE_DIR / "config" / "party_colours.json") as f:
     _raw = json.load(f)
 party_color = {canon(k): v for k, v in _raw.items()}
 party_color.setdefault("fraktionslos", "#888888")

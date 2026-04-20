@@ -15,7 +15,7 @@ PERIODS = sys.argv[1].split(",") if len(sys.argv) > 1 else [
     "bundestag_2017_2021", "bundestag_2021_2025", "bundestag_2025_2029",
 ]
 
-OUTPUT = Path("output")
+OUTPUT = Path(__file__).parent.parent / "output"
 
 VOTE_VALUES = {"yes", "no", "abstain", "no_show"}
 

@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 
 PERIODS = [
     ("bundestag_2005_2009", "2005–09", ["CDU/CSU", "SPD"]),
@@ -102,7 +102,7 @@ def resolve_color(party: str, colors: dict) -> str:
 
 
 def main():
-    with open(ROOT / "party_colours.json") as f:
+    with open(ROOT / "config" / "party_colours.json") as f:
         colors = json.load(f)
 
     period_labels = []
@@ -209,7 +209,8 @@ def main():
     ax.grid(axis="y", color="#333", linestyle="--", linewidth=0.7)
 
     plt.tight_layout()
-    out = ROOT / "output" / "polarisation_by_party.png"
+    out = ROOT / "output" / "img" / "polarisation_by_party.png"
+    (ROOT / "output" / "img").mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     print(f"\nSaved → {out}")

@@ -30,7 +30,7 @@ from pathlib import Path
 from scipy.optimize import minimize_scalar
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 IMG_DIR  = BASE_DIR / "output" / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 

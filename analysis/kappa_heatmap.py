@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 
 PERIODS = [
     ("bundestag_2005_2009", "2005–09"),
@@ -108,7 +108,7 @@ def party_kappa_matrix(nodes: dict, kappas: dict) -> tuple[list[str], np.ndarray
 # ── Plot ──────────────────────────────────────────────────────────────────────
 
 def main():
-    with open(ROOT / "party_colours.json") as f:
+    with open(ROOT / "config" / "party_colours.json") as f:
         colors = json.load(f)
 
     all_parties_list, all_matrices, period_labels = [], [], []
@@ -177,7 +177,8 @@ def main():
     cbar.ax.yaxis.set_tick_params(color="white")
     plt.setp(cbar.ax.yaxis.get_ticklabels(), color="white", fontsize=8)
     cbar.outline.set_edgecolor("#333")
-    out = ROOT / "output" / "kappa_heatmap.png"
+    out = ROOT / "output" / "img" / "kappa_heatmap.png"
+    (ROOT / "output" / "img").mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, bbox_inches="tight",
                 facecolor=fig.get_facecolor())
     print(f"\nSaved → {out}")

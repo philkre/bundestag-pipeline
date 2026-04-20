@@ -23,10 +23,10 @@ import matplotlib.colors as mcolors
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 IMG_DIR  = BASE_DIR / "output" / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
-COLORS_F = BASE_DIR / "renderer" / "party_colours.json"
+COLORS_F = BASE_DIR / "config" / "party_colours.json"
 
 PERIODS = [
     ("bundestag_2005_2009", "2005–09"),
