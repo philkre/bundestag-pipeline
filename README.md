@@ -1,83 +1,110 @@
 # Bundestag Voting Analysis Pipeline
 
-Analysis of German parliamentary voting behaviour from 2005 to 2029. Measures pairwise voting similarity between MPs using Cohen's κ, then visualises ideological positioning, polarisation trends, and coalition cohesion across all Bundestag periods.
+Analysis of German parliamentary voting behaviour from 2005 to 2029 across six Bundestag periods. Measures pairwise voting similarity between MPs using Cohen's κ, then applies network analysis, dimensionality reduction, and statistical physics methods to visualise ideological positioning, polarisation, and coalition cohesion.
 
-## Pipeline overview
+## Project structure
 
 ```
-scrape.py          → votes.jsonl, polls.jsonl        (raw API data)
-ingest.py          → nodes.csv, edges.csv, graph.gexf (per-period graphs)
-compute_allpairs_kappa.py → edges_allpairs.csv        (all MP pairs)
+bundestag-pipeline/
+├── pipeline/        data acquisition and graph construction
+├── analysis/        visualisation and statistical analysis scripts
+├── config/          party colours and coalition definitions
+├── renderer/        JS network renderer (Node.js)
+└── output/
+    ├── bundestag_YYYY_YYYY/   per-period nodes.csv, edges.csv, raw.json
+    └── img/                   rendered PNGs
 ```
 
-Analysis and visualisation scripts consume those outputs independently.
+## Data flow
 
-## Scripts
+```
+pipeline/scrape.py                →  output/{period}/raw.json
+                                      polls.jsonl, votes.jsonl
+pipeline/ingest.py                →  output/{period}/nodes.csv
+                                      output/{period}/edges.csv
+pipeline/compute_allpairs_kappa.py →  output/{period}/edges_allpairs.csv
 
-| Script | What it produces |
+analysis/*.py                     →  output/img/*.png
+```
+
+Analysis scripts read from `output/` independently — they can be re-run without repeating the scrape or ingest steps.
+
+## Pipeline scripts
+
+| Script | What it does |
 |---|---|
-| `scrape.py` | Downloads roll-call votes and polls from the abgeordnetenwatch API v2 |
-| `ingest.py` / `main.py` | Builds weighted MP-pair network (edges = Cohen's κ); outputs CSVs and GEXF |
-| `compute_allpairs_kappa.py` | Full all-pairs κ matrix; writes `edges_allpairs.csv` |
-| `mp_mds_strip.py` | 1D MDS strip chart — one dot per MP, positioned by voting similarity, coloured by party |
-| `mds_drift.py` | Party-level ideological drift across periods on a normalised left–right axis |
-| `polarisation.py` | Time series of government vs. opposition voting alignment |
-| `polarisation_by_party.py` | Decomposes polarisation by individual opposition party |
-| `coalition_cohesion.py` | Coalition internal cohesion and pair-wise κ time series |
-| `kappa_heatmap.py` | Party × party mean κ heatmap across all six periods |
-| `network.py` / `plot.py` | Network graph rendering (force-atlas2 or party layout) |
+| `pipeline/scrape.py` | Downloads roll-call votes and polls from the abgeordnetenwatch API v2 |
+| `pipeline/ingest.py` | Builds a weighted MP-pair network (edge weight = Cohen's κ); writes CSVs and GEXF |
+| `pipeline/compute_allpairs_kappa.py` | Computes the full all-pairs κ matrix; writes `edges_allpairs.csv` |
+| `pipeline/network.py` | Graph metrics (density, components, cross-party edge counts) |
+| `pipeline/plot.py` | Network graph rendering (force-layout or party layout) |
+| `pipeline/cli.py` | CLI argument parsing for `main.py` |
+| `main.py` | Entry point: scrape → ingest → plot in one command |
 
-## Data
+## Analysis scripts
 
-One output directory per parliamentary period under `output/`:
+| Script | Output |
+|---|---|
+| `analysis/mp_mds_strip.py` | 1D MDS strip — one dot per MP, positioned by voting similarity |
+| `analysis/mds_drift.py` | Party-level ideological drift across all six periods |
+| `analysis/mp_coalition_alignment.py` | Per-MP coalition alignment over time |
+| `analysis/mp_cross_aisle.py` | Party × party mean κ heatmaps per period |
+| `analysis/mp_cross_aisle_simple.py` | Coalition vs. opposition κ over time (line chart) |
+| `analysis/polarisation.py` | Government vs. opposition voting alignment time series |
+| `analysis/polarisation_by_party.py` | Polarisation decomposed by opposition party |
+| `analysis/coalition_cohesion.py` | Within-coalition cohesion and pair-wise κ time series |
+| `analysis/kappa_heatmap.py` | Party × party mean κ heatmap grid |
+| `analysis/mp_influence.py` | Per-MP mutual information I(σᵢ; γ) — how predictive each MP's vote is of the chamber majority; chancellor and faction leaders highlighted |
+| `analysis/mp_ising.py` | Mean-field Ising model fitted to voting data; effective temperature per period |
+| `analysis/mp_ising_exact.py` | Exact inverse Ising model at party level; energy landscape and critical temperature |
 
+All analysis scripts accept an optional `light` argument for a light-mode version:
+```bash
+python analysis/mp_influence.py light
 ```
-output/
-  bundestag_2005_2009/
-    nodes.csv
-    edges.csv
-    edges_allpairs.csv
-  bundestag_2009_2013/
-  ...
-  img/                   ← all rendered PNGs
-```
-
-Periods covered: 2005–2009, 2009–2013, 2013–2017, 2017–2021, 2021–2025, 2025–2029.
 
 ## Usage
 
 ```bash
-# Scrape raw data for a period
-python scrape.py bundestag_2021_2025
+# 1. Scrape raw data for a period
+python pipeline/scrape.py --outdir output/bundestag_2021_2025
 
-# Build graph
-python ingest.py bundestag_2021_2025
+# 2. Build the voting similarity graph
+python main.py --votes output/bundestag_2021_2025/votes.jsonl \
+               --polls output/bundestag_2021_2025/polls.jsonl \
+               --out-dir output/bundestag_2021_2025
 
-# Compute all-pairs kappa (slow; skip if edges_allpairs.csv exists)
-python compute_allpairs_kappa.py bundestag_2021_2025
+# 3. Compute all-pairs kappa (slow; skip if edges_allpairs.csv already exists)
+python pipeline/compute_allpairs_kappa.py bundestag_2021_2025
 
-# Render MP strip chart (dark + light)
-python mp_mds_strip.py bundestag_2021_2025
-python mp_mds_strip.py bundestag_2021_2025 light
+# 4. Run any analysis script
+python analysis/mp_influence.py
+python analysis/mp_cross_aisle.py light
 ```
+
+Periods covered: **2005–09 · 2009–13 · 2013–17 · 2017–21 · 2021–25 · 2025–29**
 
 ## Configuration
 
 | File | Purpose |
 |---|---|
-| `renderer/party_colours.json` | Hex colour per party |
-| `renderer/coalitions.json` / `coalitions.json` | Coalition composition per period |
+| `config/party_colours.json` | Hex colour per party (single source of truth) |
+| `config/coalitions.json` | Coalition composition per period |
 
 ## Requirements
 
-```
-pip install -r requirements.txt
+```bash
+pip install -r requirements.txt   # Python 3.10+
 ```
 
-Python 3.10+. Node.js required for `renderer/render.js`.
+Node.js is required only for `renderer/render.js` (interactive network SVG).
 
 ## Methodology
 
-Voting similarity between two MPs is measured as Cohen's κ on their shared votes, controlling for chance agreement. A κ of 1 means identical voting record; 0 means no better than chance; negative values indicate systematic disagreement.
+**Voting similarity** between two MPs is Cohen's κ on their shared votes, controlling for chance agreement: κ = 1 means identical voting record; κ = 0 means no better than chance; κ < 0 means systematic disagreement.
 
-1D MDS (classical, eigendecomposition of the double-centred distance matrix) projects each MP onto a single ideological axis. Within each period the axis is oriented so coalition parties have positive (right) mean — giving a consistent **opposition ← → coalition** interpretation across all charts.
+**Ideological positioning** uses 1D classical MDS (eigendecomposition of the double-centred κ-distance matrix). Within each period the axis is oriented so coalition parties sit on the positive side, giving a consistent *opposition ← → coalition* interpretation across all charts.
+
+**MP influence** is measured as the mutual information I(σᵢ; γ) between an MP's individual vote σᵢ and the chamber majority direction γ. Higher values mean the MP's vote is a stronger predictor of the overall outcome.
+
+**Ising model** treats each party as a spin (±1). The exact inverse Ising procedure finds coupling strengths J_ij and biases h_i such that the maximum-entropy model reproduces the observed vote correlations. The ratio T_eff / T_c indicates how close the system is to a phase transition — values below 1 indicate an ordered (polarised) regime.
