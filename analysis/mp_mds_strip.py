@@ -55,12 +55,13 @@ else:
         ann_line_alpha  = 0.38,
     )
     LIGHT_PARTY_OVERRIDES = {}
-OUTPUT    = Path(__file__).parent.parent / "output"
+BASE_DIR  = Path(__file__).parent.parent
+OUTPUT    = BASE_DIR / "output"
 IMG_DIR   = OUTPUT / "img"
 IMG_DIR.mkdir(parents=True, exist_ok=True)
 
 DATA_DIR  = OUTPUT / PERIOD
-COLORS_F  = Path(__file__).parent.parent / "config" / "party_colours.json"
+COLORS_F  = BASE_DIR / "config" / "party_colours.json"
 
 PARTY_ORDER = ["AfD", "CDU/CSU", "FDP", "SPD", "BÜNDNIS 90/DIE GRÜNEN",
                "Die Linke", "BSW"]

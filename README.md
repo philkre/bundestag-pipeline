@@ -18,8 +18,9 @@ bundestag-pipeline/
 ## Data flow
 
 ```
-pipeline/scrape.py                →  output/{period}/raw.json
-                                      polls.jsonl, votes.jsonl
+pipeline/scrape.py                →  output/{period}/polls.jsonl
+                                      output/{period}/votes.jsonl
+pipeline/build_raw.py             →  output/{period}/raw.json
 pipeline/ingest.py                →  output/{period}/nodes.csv
                                       output/{period}/edges.csv
 pipeline/compute_allpairs_kappa.py →  output/{period}/edges_allpairs.csv
@@ -33,7 +34,8 @@ Analysis scripts read from `output/` independently — they can be re-run withou
 
 | Script | What it does |
 |---|---|
-| `pipeline/scrape.py` | Downloads roll-call votes and polls from the abgeordnetenwatch API v2 |
+| `pipeline/scrape.py` | Downloads roll-call votes and polls from the abgeordnetenwatch API v2; writes `polls.jsonl` and `votes.jsonl` |
+| `pipeline/build_raw.py` | Combines `polls.jsonl` + `votes.jsonl` into `raw.json` (required by analysis scripts) |
 | `pipeline/ingest.py` | Builds a weighted MP-pair network (edge weight = Cohen's κ); writes CSVs and GEXF |
 | `pipeline/compute_allpairs_kappa.py` | Computes the full all-pairs κ matrix; writes `edges_allpairs.csv` |
 | `pipeline/network.py` | Graph metrics (density, components, cross-party edge counts) |
@@ -69,12 +71,15 @@ python analysis/mp_influence.py light
 # 1. Scrape raw data for a period
 python pipeline/scrape.py --outdir output/bundestag_2021_2025
 
-# 2. Build the voting similarity graph
+# 2. Combine into raw.json (needed by analysis scripts)
+python pipeline/build_raw.py bundestag_2021_2025
+
+# 3. Build the voting similarity graph
 python main.py --votes output/bundestag_2021_2025/votes.jsonl \
                --polls output/bundestag_2021_2025/polls.jsonl \
                --out-dir output/bundestag_2021_2025
 
-# 3. Compute all-pairs kappa (slow; skip if edges_allpairs.csv already exists)
+# 4. Compute all-pairs kappa (slow; skip if edges_allpairs.csv already exists)
 python pipeline/compute_allpairs_kappa.py bundestag_2021_2025
 
 # 4. Run any analysis script
